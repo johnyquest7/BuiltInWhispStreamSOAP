@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whisper Model Transcription</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f9;
+        }
+        header {
+            background-color: #6200ea;
+            color: white;
+            padding: 1rem;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        header svg {
+            width: 50px;
+            height: 50px;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+        main {
+            display: flex;
+            flex-direction: row;
+            gap: 1rem;
+            max-width: 1200px;
+            width: 95%;
+            padding: 1rem;
+            margin: 1rem auto;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .left-panel, .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        select, button, textarea {
+            width: 100%;
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        textarea {
+            resize: none;
+            overflow-y: auto;
+        }
+        #inputText {
+            width: calc(100% - 1rem); /* Match model selection dropdown width */
+            height: 8rem; /* Enough to show 5 lines */
+            margin-bottom: 1rem;
+        }
+        #responseText {
+            height: 32rem; /* Enough to show 20 lines */
+            flex-grow: 1;
+            margin-bottom: 1rem;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ddd;
+            cursor: not-allowed;
+        }
+        canvas {
+            display: block;
+            margin: 1rem 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-start;
+        }
+        footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: #120101;
+            font-size: 0.9rem;
+        }
+        footer a {
+            color: #6200ea;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <svg height="100px" width="100px" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 8 8" xml:space="preserve"><style type="text/css">.st0{fill:#77B3D4;}
+            .st1{opacity:0.2;}
+            .st2{fill:#231F20;}
+            .st3{fill:#4F5D73;}
+            .st4{fill:#FFFFFF;}</style><g id="Layer_1"><g><path class="st0" cx="32" cy="32" r="32" d="M8 4A4 4 0 0 1 4 8A4 4 0 0 1 0 4A4 4 0 0 1 8 4z"/></g><g class="st1"><g><g><path class="st2" d="M4 5.188c0.412 0 0.75 -0.338 0.75 -0.75v-2.25c0 -0.412 -0.338 -0.75 -0.75 -0.75s-0.75 0.338 -0.75 0.75v2.25c0 0.412 0.338 0.75 0.75 0.75"/></g></g></g><g class="st1"><g><path class="st2" d="M4 6.025c-0.9 0 -1.625 -0.725 -1.625 -1.625v-0.475c0 -0.1 0.087 -0.188 0.188 -0.188s0.188 0.087 0.188 0.188v0.475c0 0.688 0.563 1.25 1.25 1.25s1.25 -0.563 1.25 -1.25v-0.475c0 -0.1 0.087 -0.188 0.188 -0.188s0.188 0.087 0.188 0.188v0.475c0 0.9 -0.725 1.625 -1.625 1.625"/></g></g><g class="st1"><g><path class="st2" d="M4 6.875c-0.1 0 -0.188 -0.087 -0.188 -0.188v-0.75c0 -0.1 0.087 -0.188 0.188 -0.188s0.188 0.087 0.188 0.188v0.75c0 0.1 -0.087 0.188 -0.188 0.188"/></g></g><g class="st1"><g><path class="st2" d="M4.625 7H3.375c-0.1 0 -0.188 -0.087 -0.188 -0.188S3.275 6.625 3.375 6.625h1.25c0.1 0 0.188 0.087 0.188 0.188S4.725 7 4.625 7"/></g></g><g><g><path class="st3" d="M4 4.938c0.412 0 0.75 -0.338 0.75 -0.75v-2.25c0 -0.412 -0.338 -0.75 -0.75 -0.75s-0.75 0.338 -0.75 0.75v2.25c0 0.412 0.338 0.75 0.75 0.75"/></g></g><g><path class="st4" d="M4 5.775c-0.9 0 -1.625 -0.725 -1.625 -1.625v-0.475c0 -0.1 0.087 -0.188 0.188 -0.188s0.188 0.087 0.188 0.188v0.475c0 0.688 0.563 1.25 1.25 1.25s1.25 -0.563 1.25 -1.25v-0.475c0 -0.1 0.087 -0.188 0.188 -0.188s0.188 0.087 0.188 0.188v0.475c0 0.9 -0.725 1.625 -1.625 1.625"/></g><g><path class="st4" d="M4 6.625c-0.1 0 -0.188 -0.087 -0.188 -0.188v-0.75c0 -0.1 0.087 -0.188 0.188 -0.188s0.188 0.087 0.188 0.188v0.75c0 0.1 -0.087 0.188 -0.188 0.188"/></g><g><path class="st4" d="M4.625 6.75H3.375c-0.1 0 -0.188 -0.087 -0.188 -0.188S3.275 6.375 3.375 6.375h1.25c0.1 0 0.188 0.087 0.188 0.188S4.725 6.75 4.625 6.75"/></g></g><g id="Layer_2"/></svg>
+        <h1>Whisper Transcription & Medical Note Creator</h1>
+    </header>
+    <main>
+        <div class="left-panel">
+            <div class="section">
+                <label for="modelSelect">Choose Whisper Model:</label>
+                <select id="modelSelect">
+                    <option value="tiny">Tiny</option>
+                    <option value="small">Small</option>
+                    <option value="medium">Medium</option>
+                </select>
+            </div>
+            <div class="section">
+                <p id="status">Loading...</p>
+                <div class="button-group">
+                    <button id="startRecord" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                            <circle cx="12" cy="12" r="8" stroke-width="2" />
+                            <path d="M10 8l6 4-6 4V8z" />
+                        </svg>
+                        Start Recording
+                    </button>
+                    <button id="stopRecord" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                            <rect x="8" y="8" width="8" height="8" stroke-width="2" />
+                        </svg>
+                        Stop Recording
+                    </button>
+                </div>
+            </div>
+            <div class="section">
+                <canvas id="visualizer" width="600" height="100"></canvas>
+            </div>
+            <div class="section">
+                <label for="inputText">Transcription:</label>
+                <textarea id="inputText"></textarea>
+            </div>
+            <div class="button-group">
+                <button id="sendButton">Send to AI</button>
+            </div>
+        </div>
+        <div class="right-panel">
+            <div class="section">
+                <label for="responseText">AI Response:</label>
+                <textarea id="responseText" readonly></textarea>
+            </div>
+            <div class="button-group">
+                <button id="copyButton">Copy as JSON</button>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p>Only for research purposes. Not to be used in clinical settings. To be used by medical professionals.AI generated content may not be accurate. verify before using output.</p>
+    </footer>
+    <script type="module">
+        import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.6.1';
+
+        env.allowLocalModels = false;
+        env.remoteModels = {
+            'Xenova/whisper-tiny': 'https://huggingface.co/Xenova/whisper-tiny/resolve/main/',
+            'Xenova/whisper-small': 'https://huggingface.co/Xenova/whisper-small/resolve/main/',
+            'Xenova/whisper-medium': 'https://huggingface.co/Xenova/whisper-medium/resolve/main/'
+        };
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let transcriber;
+        let audioContext;
+        let analyser;
+        let visualizerContext;
+
+        const startRecord = document.getElementById('startRecord');
+        const stopRecord = document.getElementById('stopRecord');
+        const status = document.getElementById('status');
+        const transcription = document.getElementById('inputText');
+        const responseText = document.getElementById('responseText');
+        const sendButton = document.getElementById('sendButton');
+        const copyButton = document.getElementById('copyButton');
+        const visualizer = document.getElementById('visualizer');
+        visualizerContext = visualizer.getContext('2d');
+
+        async function loadModel() {
+            try {
+                const selectedModel = document.getElementById('modelSelect').value;
+                const modelId = `Xenova/whisper-${selectedModel}`;
+                status.textContent = 'Loading model...';
+                transcriber = await pipeline('automatic-speech-recognition', modelId);
+                status.textContent = 'Model loaded. Ready to record.';
+                startRecord.disabled = false;
+            } catch (error) {
+                console.error('Error loading model:', error);
+                status.textContent = 'Error: Unable to load the model.';
+            }
+        }
+
+        document.getElementById('modelSelect').addEventListener('change', loadModel);
+
+        startRecord.addEventListener('click', async () => {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaStreamSource(stream);
+                source.connect(analyser);
+
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm;codecs=opus',
+                    audioBitsPerSecond: 16000
+                });
+
+                mediaRecorder.start();
+                audioChunks = []; // Reset chunks at start of recording
+
+                status.textContent = 'Recording...';
+                startRecord.disabled = true;
+                stopRecord.disabled = false;
+
+                mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+
+                visualize();
+            } catch (error) {
+                console.error('Error starting recording:', error);
+                status.textContent = 'Error: Unable to access microphone.';
+            }
+        });
+
+        stopRecord.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                status.textContent = 'Processing audio...';
+                startRecord.disabled = false;
+                stopRecord.disabled = true;
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    await transcribeAudio(audioBlob);
+                };
+            }
+        });
+
+        async function transcribeAudio(audioBlob) {
+            try {
+                const arrayBuffer = await audioBlob.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+                // Calculate the total duration and create appropriate offline context
+                const duration = audioBuffer.duration;
+                const offlineContext = new OfflineAudioContext(1, Math.ceil(duration * 16000), 16000);
+
+                const source = offlineContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(offlineContext.destination);
+                source.start();
+
+                const resampled = await offlineContext.startRendering();
+                const float32Array = resampled.getChannelData(0);
+                const medicalPrompt = `This is a medical conversation between a doctor and a patient`;
+
+
+                status.textContent = 'Transcribing audio...';
+
+                // Use chunking for long audio files
+                const result = await transcriber(float32Array, {
+                    chunk_length_s: 30,
+                    temperature: 0.1,
+                    beam_size: 5,
+                    stride_length_s: 5,
+                    language: 'english',
+                    task: 'transcribe',
+                    sampling_rate: 16000,
+                    return_timestamps: true,
+                    prompt: medicalPrompt
+                });
+
+                transcription.value = result.text;
+                status.textContent = 'Transcription complete.';
+            } catch (error) {
+                console.error('Transcription error:', error);
+                status.textContent = 'Error during transcription.';
+            }
+        }
+        function processStreamChunk(streamChunk) {
+            streamChunk = streamChunk.replace(/#/g, ''); // Remove all '#' characters
+            streamChunk = streamChunk.replace(/\*/g, ''); // Remove all '*' characters
+            return streamChunk;
+            }
+
+        sendButton.addEventListener('click', async () => {
+            const text = transcription.value.trim();
+            if (!text) {
+                responseText.value = 'Please enter or transcribe some text.';
+                return;
+            }
+            try {
+                responseText.value = 'Sending to AI...';
+                const llm = await window.ai.languageModel.create({temperature: 0.2,topK: 2,
+                    systemPrompt: 'You are a helpful assistant.'
+                });
+
+                const user_prompt = `Task: Convert Medical Transcript to Structured Note.
+                You are an expert medical scribe with extensive knowledge of medical terminology and note-taking. Your task is to convert the following medical transcript into a well-structured medical note. Follow these guidelines:
+                First, carefully review the transcript and correct any apparent transcription errors or spelling mistakes. Pay special attention to medical terms, drug names, and numerical values.
+                Organize the corrected information into the following sections:
+
+                Patient Information
+                Chief Complaint
+                History of Present Illness
+                Past Medical History
+                Medications
+                Physical Examination
+                Laboratory Results
+                Assessment
+                Plan
+
+                Use professional medical terminology where appropriate.
+                Be concise but comprehensive, including all relevant information from the transcript.
+                If any critical information is missing or unclear, note it as "Not provided" or "Unclear from transcript."
+                Format the note clearly with section headers and bullet points for readability.
+                Maintain a professional, objective tone throughout the note. No need for extra notes or commentary after the Plan section.`;
+                const combinedText = user_prompt + text;
+
+                console.log(combinedText);
+
+                responseText.value = ''; // Clear previous response
+
+                const stream = llm.promptStreaming(combinedText);
+                for await (const chunk of stream) {
+                    // Append the streamed chunk to the responseText.
+                    // Adjust if your chunk is an object (e.g. chunk.message.content) rather than a plain string.
+                    responseText.value += chunk;
+
+                }
+                let processedText = processStreamChunk(responseText.value);
+                console.log(processedText);
+                responseText.value = processedText;
+
+
+            } catch (error) {
+                console.error('Error communicating with AI:', error);
+                responseText.value = 'Error communicating with AI. Please try again.';
+            }
+        });
+
+        copyButton.addEventListener('click', () => {
+            const data = {
+                transcription: transcription.value,
+                response: responseText.value
+            };
+            navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
+                alert('Data copied to clipboard as JSON!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        });
+
+        copyButton.addEventListener('click', () => {
+            const data = {
+                transcription: transcription.value,
+                response: responseText.value
+            };
+            navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
+                alert('Data copied to clipboard as JSON!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        });
+
+        function visualize() {
+            const WIDTH = visualizer.width;
+            const HEIGHT = visualizer.height;
+            analyser.fftSize = 256;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            visualizerContext.clearRect(0, 0, WIDTH, HEIGHT);
+
+            function draw() {
+                requestAnimationFrame(draw);
+                analyser.getByteFrequencyData(dataArray);
+                visualizerContext.fillStyle = 'rgb(200, 200, 200)';
+                visualizerContext.fillRect(0, 0, WIDTH, HEIGHT);
+                const barWidth = (WIDTH / bufferLength) * 2.5;
+                let barHeight;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    barHeight = dataArray[i] / 2;
+                    visualizerContext.fillStyle = `rgb(${barHeight + 100}, 50, 50)`;
+                    visualizerContext.fillRect(x, HEIGHT - barHeight / 2, barWidth, barHeight);
+                    x += barWidth + 1;
+                }
+            }
+
+            draw();
+        }
+
+        // Initialize after page load
+        window.addEventListener('load', loadModel);
+    </script>
+</body>
+</html>
