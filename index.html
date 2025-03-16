@@ -309,7 +309,7 @@
             }
             try {
                 responseText.value = 'Sending to AI...';
-                const llm = await chrome.aiOriginTrial.languageModel.create({temperature: 0.2,topK: 2,
+                const llm = await LanguageModel.create({temperature: 0.2,topK: 2,
                     systemPrompt: 'You are a helpful assistant.'
                 });
 
